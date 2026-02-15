@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ScreenSaverTray</AssemblyName>
+    <RootNamespace>ScreenSaverTrayApp</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>ScreenSaver Tray</Product>
+    <Description>System tray application that launches the screensaver after a configurable idle timeout.</Description>
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
+  </PropertyGroup>
+
+</Project>
