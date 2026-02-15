@@ -1,0 +1,42 @@
+name: Build Desktop (.NET)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    env:
+      DOTNET_VERSION: "8.0.x"
+      PROJECT_PATH: "ScreenSaver.csproj"
+      PUBLISH_DIR: "publish"
+      ZIP_NAME: "screensaver.zip"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore "${{ env.PROJECT_PATH }}"
+
+      - name: Publish (Release)
+        run: dotnet publish "${{ env.PROJECT_PATH }}" -c Release -o "${{ env.PUBLISH_DIR }}" --no-restore
+
+      - name: Create ZIP
+        run: |
+          Compress-Archive -Path "${{ env.PUBLISH_DIR }}\*" -DestinationPath "${{ env.ZIP_NAME }}"
+
+      - name: Upload artifact (ZIP)
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-build
+          path: ${{ env.ZIP_NAME }}
