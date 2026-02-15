@@ -61,9 +61,9 @@ internal static class Program
     {
         var menu = new ContextMenuStrip();
 
-        _menuItem30Sec = new ToolStripMenuItem("30 сек",   null, (_, _) => SetIdleLimit(30 * 1000,      _menuItem30Sec));
-        _menuItem1Min  = new ToolStripMenuItem("1 минута", null, (_, _) => SetIdleLimit(60 * 1000,      _menuItem1Min));
-        _menuItem5Min  = new ToolStripMenuItem("5 минут",  null, (_, _) => SetIdleLimit(5 * 60 * 1000,  _menuItem5Min));
+        _menuItem30Sec = new ToolStripMenuItem("30 sec",   null, (_, _) => SetIdleLimit(30 * 1000,      _menuItem30Sec));
+        _menuItem1Min  = new ToolStripMenuItem("1 minute", null, (_, _) => SetIdleLimit(60 * 1000,      _menuItem1Min));
+        _menuItem5Min  = new ToolStripMenuItem("5 minutes",  null, (_, _) => SetIdleLimit(5 * 60 * 1000,  _menuItem5Min));
 
         _menuItem1Min.Checked = true; // default selection
 
@@ -71,7 +71,7 @@ internal static class Program
         menu.Items.Add(_menuItem1Min);
         menu.Items.Add(_menuItem5Min);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(new ToolStripMenuItem("Выход", null, (_, _) => Application.Exit()));
+        menu.Items.Add(new ToolStripMenuItem("Exit", null, (_, _) => Application.Exit()));
 
         return menu;
     }
