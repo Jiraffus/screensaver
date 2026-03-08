@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Windows.Media.Control;
 using Timer = System.Windows.Forms.Timer;
 
 namespace ScreenSaverTrayApp;
@@ -88,8 +89,26 @@ internal static class Program
 
     private static void OnIdleTimerTick(object? sender, EventArgs e)
     {
-        if (GetIdleTimeMs() >= _idleLimitMs)
+        if (GetIdleTimeMs() >= _idleLimitMs && !IsMediaPlaying())
             LaunchScreenSaver();
+    }
+
+    private static bool IsMediaPlaying()
+    {
+        try
+        {
+            var manager = GlobalSystemMediaTransportControlsSessionManager
+                .RequestAsync().AsTask().GetAwaiter().GetResult();
+            var session = manager.GetCurrentSession();
+            if (session == null) return false;
+
+            var status = session.GetPlaybackInfo().PlaybackStatus;
+            return status == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>Returns the number of milliseconds since the last user input.</summary>
