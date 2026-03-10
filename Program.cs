@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Windows.Media.Control;
 using Timer = System.Windows.Forms.Timer;
@@ -24,6 +25,12 @@ internal static class Program
     // Windows API: get desktop window (always available, reliably handles SC_SCREENSAVE)
     [DllImport("user32.dll")]
     private static extern IntPtr GetDesktopWindow();
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
     private const int ScScreenSave = 0xF140;
     private const int WmSysCommand = 0x0112;
@@ -90,21 +97,41 @@ internal static class Program
 
     private static void OnIdleTimerTick(object? sender, EventArgs e)
     {
-        if (GetIdleTimeMs() >= _idleLimitMs && !IsMediaPlaying())
+        if (GetIdleTimeMs() >= _idleLimitMs && !IsMediaPlayingInForeground())
             LaunchScreenSaver();
     }
 
-    private static bool IsMediaPlaying()
+    private static bool IsMediaPlayingInForeground()
     {
         try
         {
             _smtcManager ??= GlobalSystemMediaTransportControlsSessionManager
                 .RequestAsync().AsTask().GetAwaiter().GetResult();
-            var session = _smtcManager.GetCurrentSession();
-            if (session == null) return false;
 
-            var status = session.GetPlaybackInfo().PlaybackStatus;
-            return status == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
+            var sessions = _smtcManager.GetSessions();
+            if (sessions.Count == 0) return false;
+
+            IntPtr hWnd = GetForegroundWindow();
+            if (hWnd == IntPtr.Zero) return false;
+
+            GetWindowThreadProcessId(hWnd, out uint pid);
+            if (pid == 0) return false;
+
+            string foregroundApp;
+            try { foregroundApp = Process.GetProcessById((int)pid).ProcessName.ToLowerInvariant(); }
+            catch { return false; }
+
+            foreach (var session in sessions)
+            {
+                if (session.GetPlaybackInfo().PlaybackStatus !=
+                    GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
+                    continue;
+
+                string appId = session.SourceAppUserModelId.ToLowerInvariant();
+                if (appId.Contains(foregroundApp) || foregroundApp.Contains(appId))
+                    return true;
+            }
+            return false;
         }
         catch
         {
