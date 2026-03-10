@@ -21,9 +21,9 @@ internal static class Program
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     private static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-    // Windows API: get active window
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    private static extern IntPtr GetForegroundWindow();
+    // Windows API: get desktop window (always available, reliably handles SC_SCREENSAVE)
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetDesktopWindow();
 
     private const int ScScreenSave = 0xF140;
     private const int WmSysCommand = 0x0112;
@@ -31,6 +31,7 @@ internal static class Program
     private static NotifyIcon? _notifyIcon;
     private static Timer? _idleTimer;
     private static uint _idleLimitMs = 60 * 1000; // default: 1 minute
+    private static GlobalSystemMediaTransportControlsSessionManager? _smtcManager;
 
     private static ToolStripMenuItem? _menuItem30Sec;
     private static ToolStripMenuItem? _menuItem1Min;
@@ -97,9 +98,9 @@ internal static class Program
     {
         try
         {
-            var manager = GlobalSystemMediaTransportControlsSessionManager
+            _smtcManager ??= GlobalSystemMediaTransportControlsSessionManager
                 .RequestAsync().AsTask().GetAwaiter().GetResult();
-            var session = manager.GetCurrentSession();
+            var session = _smtcManager.GetCurrentSession();
             if (session == null) return false;
 
             var status = session.GetPlaybackInfo().PlaybackStatus;
@@ -107,6 +108,7 @@ internal static class Program
         }
         catch
         {
+            _smtcManager = null;
             return false;
         }
     }
@@ -124,7 +126,7 @@ internal static class Program
 
     private static void LaunchScreenSaver()
     {
-        IntPtr hWnd = GetForegroundWindow();
+        IntPtr hWnd = GetDesktopWindow();
         SendMessage(hWnd, WmSysCommand, new IntPtr(ScScreenSave), IntPtr.Zero);
     }
 
